@@ -48,10 +48,12 @@ pipeline:
     commands:
       - sbt update
 
-  compile:
+  build:
     <<: *sbtenv
     commands:
-      - sbt rholang/bnfc:generate compile test:compile it:compile doc
+      - sbt rholang/bnfc:generate compile node/docker:publishLocal
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
 
   run-unit-tests:
     <<: *sbtenv
@@ -69,13 +71,12 @@ pipeline:
   package:
     <<: *sbtenv
     commands:
-      - sbt node/docker:publishLocal node/debian:packageBin node/universal:packageZipTarball
+      - sbt node/debian:packageBin node/universal:packageZipTarball
       - mkdir -p artifacts
       - cp node/target/rnode_*_all.deb node/target/universal/*.tgz artifacts/
     volumes:
       - /var/cache/rchain-build/.sbt:/root/.sbt
       - /var/cache/rchain-build/.ivy2:/root/.ivy2
-      - /var/run/docker.sock:/var/run/docker.sock
     when:
       event: [ push, tag ]
 
